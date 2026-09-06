@@ -169,6 +169,9 @@ export function ChatWindow({
   const [viewer, setViewer] = useState<ViewerItem | null>(null);
   const [prefs, setPrefs] = useState<ThreadPrefs>({ themeId: "default", fontScale: 1 });
   const [nickname, setNick] = useState("");
+  const [showStickers, setShowStickers] = useState(false);
+  const [wallpaperBusy, setWallpaperBusy] = useState(false);
+
 
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
