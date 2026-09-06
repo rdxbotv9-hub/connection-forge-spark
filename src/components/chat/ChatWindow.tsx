@@ -7,6 +7,7 @@ import {
   Clock,
   CornerUpLeft,
   Download,
+  Image as ImageIcon,
   ImagePlus,
   Mic,
   MoreVertical,
@@ -16,6 +17,7 @@ import {
   Play,
   Send,
   Smile,
+  Sparkles,
   Square,
   Trash2,
   Video,
@@ -27,10 +29,12 @@ import { uploadFile } from "@/lib/media";
 import { useSignedUrl } from "@/components/SignedImage";
 import { UserAvatar } from "./UserAvatar";
 import { MediaViewer, downloadUrl, type ViewerItem } from "./MediaViewer";
+import { GifPicker, EMOJI_STICKERS } from "./GifPicker";
 import {
   CHAT_THEMES,
   getNicknames,
   getThreadPrefs,
+  patternCss,
   resolveTheme,
   saveThreadPrefs,
   setNickname,
@@ -40,14 +44,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
+
 
 export type Message = {
   id: string;
@@ -162,13 +169,18 @@ export function ChatWindow({
   const [viewer, setViewer] = useState<ViewerItem | null>(null);
   const [prefs, setPrefs] = useState<ThreadPrefs>({ themeId: "default", fontScale: 1 });
   const [nickname, setNick] = useState("");
+  const [showStickers, setShowStickers] = useState(false);
+  const [wallpaperBusy, setWallpaperBusy] = useState(false);
+
 
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
+  const wallpaperInput = useRef<HTMLInputElement>(null);
   const typingChannel = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const localKey = `srt-thread-${me.id}-${peer.id}`;
@@ -505,6 +517,29 @@ export function ChatWindow({
     "avatars",
     showProfile && peerLive.show_avatar ? peerLive.avatar_url : null,
   );
+  const wallpaperUrl = useSignedUrl("chat-media", prefs.wallpaperPath ?? null);
+
+  const sendSticker = async ({ kind, content }: { kind: "gif" | "sticker"; content: string }) => {
+    setShowStickers(false);
+    await insertMessage({ kind, content });
+  };
+
+  const pickWallpaper = async (file: File) => {
+    setWallpaperBusy(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = await uploadFile("chat-media", me.id, file, ext);
+      updatePrefs({ wallpaperPath: path, wallpaperDim: prefs.wallpaperDim ?? 20 });
+      toast.success("Wallpaper set for this chat.");
+    } catch {
+      toast.error("Could not use that picture.");
+    } finally {
+      setWallpaperBusy(false);
+    }
+  };
+
+  const pattern = prefs.noPattern ? {} : patternCss(theme.pattern, theme.bubbleInFg);
+  const fg = theme.surfaceFg;
 
   return (
     <div
@@ -516,9 +551,24 @@ export function ChatWindow({
           "--bubble-out-foreground": theme.bubbleOutFg,
           "--bubble-in": theme.bubbleIn,
           "--bubble-in-foreground": theme.bubbleInFg,
+          // The picked theme dresses the whole chat: header, composer and sheets.
+          "--surface": theme.surface,
+          "--card": theme.surface,
+          "--popover": theme.surface,
+          "--popover-foreground": fg,
+          "--card-foreground": fg,
+          "--background": theme.surface,
+          "--foreground": fg,
+          "--muted": `color-mix(in oklch, ${fg} 10%, transparent)`,
+          "--muted-foreground": `color-mix(in oklch, ${fg} 62%, transparent)`,
+          "--accent": `color-mix(in oklch, ${fg} 10%, transparent)`,
+          "--accent-foreground": fg,
+          "--border": `color-mix(in oklch, ${fg} 16%, transparent)`,
+          "--input": `color-mix(in oklch, ${fg} 20%, transparent)`,
         } as React.CSSProperties
       }
     >
+
       {/* Fixed header — stays visible while messages scroll */}
       {selected.length > 0 ? (
         <header className="z-20 flex shrink-0 items-center gap-2 border-b border-border bg-surface px-2 py-2.5">
@@ -588,17 +638,24 @@ export function ChatWindow({
         </header>
       )}
 
-      {/* Scrollable messages */}
-      <div
-        ref={listRef}
-        className="chat-canvas min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain px-2.5 py-4"
-        style={
-          {
-            fontSize: `${prefs.fontScale ?? 1}rem`,
-            backgroundImage: theme.pattern ? undefined : "none",
-          } as React.CSSProperties
-        }
-      >
+      {/* Scrollable messages over the themed canvas / photo wallpaper */}
+      <div className="relative min-h-0 flex-1">
+        <div className="absolute inset-0" style={{ background: theme.bg, ...pattern }} />
+        {wallpaperUrl && (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${wallpaperUrl})`,
+              filter: `blur(${prefs.wallpaperBlur ?? 0}px) brightness(${1 - (prefs.wallpaperDim ?? 0) / 100})`,
+            }}
+          />
+        )}
+        <div
+          ref={listRef}
+          className="relative h-full space-y-1.5 overflow-y-auto overscroll-contain px-2.5 py-4"
+          style={{ fontSize: `${prefs.fontScale ?? 1}rem` }}
+        >
+
         {visible.map((m) => (
           <MessageRow
             key={m.id}
@@ -633,7 +690,9 @@ export function ChatWindow({
             </div>
           </div>
         )}
+        </div>
       </div>
+
 
       {/* Composer */}
       <div className="shrink-0 border-t border-border bg-surface">
@@ -693,20 +752,55 @@ export function ChatWindow({
           >
             <Camera className="h-5 w-5" />
           </button>
-          <textarea
-            value={text}
-            onChange={(e) => onTextChange(e.target.value)}
-            onBlur={() => emitTyping(false)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void sendText(e);
-              }
-            }}
-            rows={1}
-            placeholder="Message"
-            className="max-h-28 min-h-10 flex-1 resize-none rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
-          />
+          <button
+            type="button"
+            onClick={() => setShowStickers(true)}
+            className="rounded-full p-2.5 text-muted-foreground hover:bg-muted"
+            aria-label="Stickers and GIFs"
+          >
+            <Sparkles className="h-5 w-5" />
+          </button>
+          <div className="relative flex-1">
+            <textarea
+              value={text}
+              onChange={(e) => onTextChange(e.target.value)}
+              onBlur={() => emitTyping(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void sendText(e);
+                }
+              }}
+              rows={1}
+              placeholder="Message"
+              className="max-h-28 min-h-10 w-full resize-none rounded-2xl border border-border bg-background py-2 pl-3 pr-10 text-sm outline-none focus:border-ring"
+            />
+            <Popover>
+              <PopoverTrigger
+                className="absolute bottom-1.5 right-1.5 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                aria-label="Insert emoji"
+                type="button"
+              >
+                <Smile className="h-5 w-5" />
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 p-2">
+                <div className="grid max-h-56 grid-cols-8 gap-1 overflow-y-auto">
+                  {EMOJI_STICKERS.map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => onTextChange(text + e)}
+                      className="rounded-md py-1 text-xl transition-transform hover:scale-110"
+                      aria-label={`Add ${e}`}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
           {text.trim() ? (
             <Button type="submit" size="icon" className="h-10 w-10 shrink-0 rounded-full">
               <Send className="h-4 w-4" />
@@ -727,6 +821,13 @@ export function ChatWindow({
       </div>
 
       <MediaViewer item={viewer} onClose={() => setViewer(null)} />
+
+      <GifPicker
+        open={showStickers}
+        onOpenChange={setShowStickers}
+        onPick={(payload) => void sendSticker(payload)}
+      />
+
 
       {/* Contact info */}
       <Sheet open={showProfile} onOpenChange={setShowProfile}>
@@ -850,14 +951,95 @@ export function ChatWindow({
                 aria-label="Text size"
               />
             </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="pat">Background pattern</Label>
+              <Switch
+                id="pat"
+                checked={!prefs.noPattern}
+                onCheckedChange={(v) => updatePrefs({ noPattern: !v })}
+              />
+            </div>
+
+            <div className="space-y-3 rounded-xl border border-border p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                My own wallpaper
+              </p>
+              <input
+                ref={wallpaperInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void pickWallpaper(file);
+                  e.target.value = "";
+                }}
+              />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  disabled={wallpaperBusy}
+                  onClick={() => wallpaperInput.current?.click()}
+                >
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  {wallpaperBusy ? "Uploading…" : prefs.wallpaperPath ? "Change picture" : "Choose picture"}
+                </Button>
+                {prefs.wallpaperPath && (
+                  <Button variant="outline" onClick={() => updatePrefs({ wallpaperPath: undefined })}>
+                    Remove
+                  </Button>
+                )}
+              </div>
+              {prefs.wallpaperPath && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Darken</Label>
+                    <Slider
+                      value={[prefs.wallpaperDim ?? 20]}
+                      min={0}
+                      max={70}
+                      step={5}
+                      onValueChange={([v]) => updatePrefs({ wallpaperDim: v ?? 0 })}
+                      aria-label="Darken wallpaper"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Blur</Label>
+                    <Slider
+                      value={[prefs.wallpaperBlur ?? 0]}
+                      min={0}
+                      max={10}
+                      step={1}
+                      onValueChange={([v]) => updatePrefs({ wallpaperBlur: v ?? 0 })}
+                      aria-label="Blur wallpaper"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => updatePrefs({ themeId: "default", customBg: undefined, customOut: undefined, fontScale: 1 })}
+              onClick={() =>
+                updatePrefs({
+                  themeId: "default",
+                  customBg: undefined,
+                  customOut: undefined,
+                  fontScale: 1,
+                  wallpaperPath: undefined,
+                  wallpaperDim: undefined,
+                  wallpaperBlur: undefined,
+                  noPattern: false,
+                })
+              }
             >
               Reset theme
             </Button>
           </div>
+
         </SheetContent>
       </Sheet>
     </div>
@@ -987,11 +1169,14 @@ function MessageRow({
       >
         <div
           className={`relative rounded-2xl px-2.5 py-1.5 shadow-sm ${
-            mine
-              ? "rounded-br-sm bg-bubble-out text-bubble-out-foreground"
-              : "rounded-bl-sm bg-bubble-in text-bubble-in-foreground"
+            mine ? "rounded-br-sm" : "rounded-bl-sm"
           }`}
+          style={{
+            background: mine ? "var(--bubble-out)" : "var(--bubble-in)",
+            color: mine ? "var(--bubble-out-foreground)" : "var(--bubble-in-foreground)",
+          }}
         >
+
           {quoted && (
             <div className="mb-1 rounded-lg border-l-2 border-primary bg-background/40 px-2 py-1">
               <p className="text-[10px] font-medium text-primary">

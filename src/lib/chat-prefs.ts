@@ -63,7 +63,14 @@ export const CHAT_THEMES: ChatTheme[] = [
   theme("candy", "Candy", "linear-gradient(160deg, oklch(0.95 0.05 200), oklch(0.95 0.06 330))", "dots", "oklch(0.98 0.02 320)", "oklch(0.26 0.05 320)", "oklch(0.85 0.1 200)", "oklch(0.24 0.06 230)", W, "oklch(0.26 0.04 320)"),
   theme("ink", "Ink", "oklch(0.15 0 0)", "grid", "oklch(0.19 0 0)", "oklch(0.96 0 0)", "oklch(0.32 0 0)", "oklch(0.98 0 0)", "oklch(0.23 0 0)", "oklch(0.95 0 0)", true),
   theme("teal", "Teal", "oklch(0.95 0.03 195)", "waves", "oklch(0.98 0.015 195)", "oklch(0.24 0.05 200)", "oklch(0.84 0.09 195)", "oklch(0.22 0.05 200)", W, "oklch(0.24 0.03 200)"),
+  theme("messenger", "Messenger", "oklch(1 0 0)", "none", W, "oklch(0.2 0.02 250)", "linear-gradient(135deg, oklch(0.62 0.2 255), oklch(0.55 0.22 285))", "oklch(0.99 0.01 260)", "oklch(0.95 0.005 250)", "oklch(0.2 0.02 250)"),
+  theme("messenger-dark", "Messenger Dark", "oklch(0.17 0.01 260)", "none", "oklch(0.21 0.015 260)", "oklch(0.97 0.005 260)", "linear-gradient(135deg, oklch(0.6 0.2 255), oklch(0.52 0.22 290))", "oklch(0.99 0.01 260)", "oklch(0.27 0.015 260)", "oklch(0.97 0.005 260)", true),
+  theme("instagram", "Instagram", "oklch(1 0 0)", "none", W, "oklch(0.2 0.02 300)", "linear-gradient(135deg, oklch(0.66 0.19 30), oklch(0.58 0.24 340), oklch(0.55 0.22 285))", "oklch(0.99 0.01 340)", "oklch(0.96 0.005 300)", "oklch(0.2 0.02 300)"),
+  theme("instagram-dark", "Instagram Dark", "oklch(0.15 0.01 300)", "none", "oklch(0.19 0.015 300)", "oklch(0.97 0.005 300)", "linear-gradient(135deg, oklch(0.64 0.2 30), oklch(0.56 0.24 340), oklch(0.53 0.22 285))", "oklch(0.99 0.01 340)", "oklch(0.25 0.015 300)", "oklch(0.97 0.005 300)", true),
+  theme("telegram", "Telegram", "linear-gradient(160deg, oklch(0.93 0.05 235), oklch(0.95 0.04 260))", "none", "oklch(0.99 0.01 235)", "oklch(0.22 0.04 250)", "oklch(0.88 0.07 200)", "oklch(0.24 0.05 230)", W, "oklch(0.24 0.03 240)"),
+  theme("snap", "Snap", "oklch(0.99 0.03 100)", "none", "oklch(1 0.02 100)", "oklch(0.2 0.02 100)", "linear-gradient(135deg, oklch(0.92 0.17 105), oklch(0.88 0.16 95))", "oklch(0.2 0.03 100)", W, "oklch(0.22 0.02 100)"),
 ];
+
 
 export function patternCss(kind: PatternKind, fg: string): { backgroundImage?: string; backgroundSize?: string } {
   const c = `color-mix(in oklch, ${fg} 12%, transparent)`;
@@ -108,7 +115,16 @@ export type ThreadPrefs = {
   customBg?: string | undefined;
   customOut?: string | undefined;
   fontScale?: number | undefined;
+  /** storage path in the chat-media bucket for a custom wallpaper */
+  wallpaperPath?: string | undefined;
+  /** 0 – 80: how much the wallpaper is dimmed so text stays readable */
+  wallpaperDim?: number | undefined;
+  /** 0 – 10 px blur on the wallpaper */
+  wallpaperBlur?: number | undefined;
+  /** hide the theme's decorative pattern */
+  noPattern?: boolean | undefined;
 };
+
 
 const THREAD_KEY = (me: string, peer: string) => `srt-theme-${me}-${peer}`;
 const NICK_KEY = (me: string) => `srt-nicknames-${me}`;
