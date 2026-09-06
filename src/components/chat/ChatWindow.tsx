@@ -899,6 +899,7 @@ function MessageRow({
 }) {
   const [offset, setOffset] = useState(0);
   const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
   const longPress = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reactions = Object.entries(message.reactions ?? {});
