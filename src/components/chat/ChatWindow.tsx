@@ -1169,11 +1169,14 @@ function MessageRow({
       >
         <div
           className={`relative rounded-2xl px-2.5 py-1.5 shadow-sm ${
-            mine
-              ? "rounded-br-sm bg-bubble-out text-bubble-out-foreground"
-              : "rounded-bl-sm bg-bubble-in text-bubble-in-foreground"
+            mine ? "rounded-br-sm" : "rounded-bl-sm"
           }`}
+          style={{
+            background: mine ? "var(--bubble-out)" : "var(--bubble-in)",
+            color: mine ? "var(--bubble-out-foreground)" : "var(--bubble-in-foreground)",
+          }}
         >
+
           {quoted && (
             <div className="mb-1 rounded-lg border-l-2 border-primary bg-background/40 px-2 py-1">
               <p className="text-[10px] font-medium text-primary">
