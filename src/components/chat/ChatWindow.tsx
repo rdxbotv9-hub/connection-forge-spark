@@ -752,20 +752,55 @@ export function ChatWindow({
           >
             <Camera className="h-5 w-5" />
           </button>
-          <textarea
-            value={text}
-            onChange={(e) => onTextChange(e.target.value)}
-            onBlur={() => emitTyping(false)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void sendText(e);
-              }
-            }}
-            rows={1}
-            placeholder="Message"
-            className="max-h-28 min-h-10 flex-1 resize-none rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
-          />
+          <button
+            type="button"
+            onClick={() => setShowStickers(true)}
+            className="rounded-full p-2.5 text-muted-foreground hover:bg-muted"
+            aria-label="Stickers and GIFs"
+          >
+            <Sparkles className="h-5 w-5" />
+          </button>
+          <div className="relative flex-1">
+            <textarea
+              value={text}
+              onChange={(e) => onTextChange(e.target.value)}
+              onBlur={() => emitTyping(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void sendText(e);
+                }
+              }}
+              rows={1}
+              placeholder="Message"
+              className="max-h-28 min-h-10 w-full resize-none rounded-2xl border border-border bg-background py-2 pl-3 pr-10 text-sm outline-none focus:border-ring"
+            />
+            <Popover>
+              <PopoverTrigger
+                className="absolute bottom-1.5 right-1.5 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                aria-label="Insert emoji"
+                type="button"
+              >
+                <Smile className="h-5 w-5" />
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 p-2">
+                <div className="grid max-h-56 grid-cols-8 gap-1 overflow-y-auto">
+                  {EMOJI_STICKERS.map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => onTextChange(text + e)}
+                      className="rounded-md py-1 text-xl transition-transform hover:scale-110"
+                      aria-label={`Add ${e}`}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
           {text.trim() ? (
             <Button type="submit" size="icon" className="h-10 w-10 shrink-0 rounded-full">
               <Send className="h-4 w-4" />
