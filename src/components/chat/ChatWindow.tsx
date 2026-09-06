@@ -638,17 +638,24 @@ export function ChatWindow({
         </header>
       )}
 
-      {/* Scrollable messages */}
-      <div
-        ref={listRef}
-        className="chat-canvas min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain px-2.5 py-4"
-        style={
-          {
-            fontSize: `${prefs.fontScale ?? 1}rem`,
-            backgroundImage: theme.pattern ? undefined : "none",
-          } as React.CSSProperties
-        }
-      >
+      {/* Scrollable messages over the themed canvas / photo wallpaper */}
+      <div className="relative min-h-0 flex-1">
+        <div className="absolute inset-0" style={{ background: theme.bg, ...pattern }} />
+        {wallpaperUrl && (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${wallpaperUrl})`,
+              filter: `blur(${prefs.wallpaperBlur ?? 0}px) brightness(${1 - (prefs.wallpaperDim ?? 0) / 100})`,
+            }}
+          />
+        )}
+        <div
+          ref={listRef}
+          className="relative h-full space-y-1.5 overflow-y-auto overscroll-contain px-2.5 py-4"
+          style={{ fontSize: `${prefs.fontScale ?? 1}rem` }}
+        >
+
         {visible.map((m) => (
           <MessageRow
             key={m.id}
