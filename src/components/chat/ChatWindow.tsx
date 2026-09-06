@@ -178,7 +178,9 @@ export function ChatWindow({
   const listRef = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
+  const wallpaperInput = useRef<HTMLInputElement>(null);
   const typingChannel = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const localKey = `srt-thread-${me.id}-${peer.id}`;
