@@ -7,6 +7,7 @@ import {
   Clock,
   CornerUpLeft,
   Download,
+  Image as ImageIcon,
   ImagePlus,
   Mic,
   MoreVertical,
@@ -16,6 +17,7 @@ import {
   Play,
   Send,
   Smile,
+  Sparkles,
   Square,
   Trash2,
   Video,
@@ -27,10 +29,12 @@ import { uploadFile } from "@/lib/media";
 import { useSignedUrl } from "@/components/SignedImage";
 import { UserAvatar } from "./UserAvatar";
 import { MediaViewer, downloadUrl, type ViewerItem } from "./MediaViewer";
+import { GifPicker, EMOJI_STICKERS } from "./GifPicker";
 import {
   CHAT_THEMES,
   getNicknames,
   getThreadPrefs,
+  patternCss,
   resolveTheme,
   saveThreadPrefs,
   setNickname,
@@ -40,14 +44,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
+
 
 export type Message = {
   id: string;
