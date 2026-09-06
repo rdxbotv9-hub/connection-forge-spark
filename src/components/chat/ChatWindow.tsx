@@ -951,14 +951,95 @@ export function ChatWindow({
                 aria-label="Text size"
               />
             </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="pat">Background pattern</Label>
+              <Switch
+                id="pat"
+                checked={!prefs.noPattern}
+                onCheckedChange={(v) => updatePrefs({ noPattern: !v })}
+              />
+            </div>
+
+            <div className="space-y-3 rounded-xl border border-border p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                My own wallpaper
+              </p>
+              <input
+                ref={wallpaperInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void pickWallpaper(file);
+                  e.target.value = "";
+                }}
+              />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  disabled={wallpaperBusy}
+                  onClick={() => wallpaperInput.current?.click()}
+                >
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  {wallpaperBusy ? "Uploading…" : prefs.wallpaperPath ? "Change picture" : "Choose picture"}
+                </Button>
+                {prefs.wallpaperPath && (
+                  <Button variant="outline" onClick={() => updatePrefs({ wallpaperPath: undefined })}>
+                    Remove
+                  </Button>
+                )}
+              </div>
+              {prefs.wallpaperPath && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Darken</Label>
+                    <Slider
+                      value={[prefs.wallpaperDim ?? 20]}
+                      min={0}
+                      max={70}
+                      step={5}
+                      onValueChange={([v]) => updatePrefs({ wallpaperDim: v ?? 0 })}
+                      aria-label="Darken wallpaper"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Blur</Label>
+                    <Slider
+                      value={[prefs.wallpaperBlur ?? 0]}
+                      min={0}
+                      max={10}
+                      step={1}
+                      onValueChange={([v]) => updatePrefs({ wallpaperBlur: v ?? 0 })}
+                      aria-label="Blur wallpaper"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => updatePrefs({ themeId: "default", customBg: undefined, customOut: undefined, fontScale: 1 })}
+              onClick={() =>
+                updatePrefs({
+                  themeId: "default",
+                  customBg: undefined,
+                  customOut: undefined,
+                  fontScale: 1,
+                  wallpaperPath: undefined,
+                  wallpaperDim: undefined,
+                  wallpaperBlur: undefined,
+                  noPattern: false,
+                })
+              }
             >
               Reset theme
             </Button>
           </div>
+
         </SheetContent>
       </Sheet>
     </div>
