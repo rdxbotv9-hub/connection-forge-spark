@@ -517,6 +517,29 @@ export function ChatWindow({
     "avatars",
     showProfile && peerLive.show_avatar ? peerLive.avatar_url : null,
   );
+  const wallpaperUrl = useSignedUrl("chat-media", prefs.wallpaperPath ?? null);
+
+  const sendSticker = async ({ kind, content }: { kind: "gif" | "sticker"; content: string }) => {
+    setShowStickers(false);
+    await insertMessage({ kind, content });
+  };
+
+  const pickWallpaper = async (file: File) => {
+    setWallpaperBusy(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = await uploadFile("chat-media", me.id, file, ext);
+      updatePrefs({ wallpaperPath: path, wallpaperDim: prefs.wallpaperDim ?? 20 });
+      toast.success("Wallpaper set for this chat.");
+    } catch {
+      toast.error("Could not use that picture.");
+    } finally {
+      setWallpaperBusy(false);
+    }
+  };
+
+  const pattern = prefs.noPattern ? {} : patternCss(theme.pattern, theme.bubbleInFg);
+  const fg = theme.surfaceFg;
 
   return (
     <div
@@ -528,9 +551,24 @@ export function ChatWindow({
           "--bubble-out-foreground": theme.bubbleOutFg,
           "--bubble-in": theme.bubbleIn,
           "--bubble-in-foreground": theme.bubbleInFg,
+          // The picked theme dresses the whole chat: header, composer and sheets.
+          "--surface": theme.surface,
+          "--card": theme.surface,
+          "--popover": theme.surface,
+          "--popover-foreground": fg,
+          "--card-foreground": fg,
+          "--background": theme.surface,
+          "--foreground": fg,
+          "--muted": `color-mix(in oklch, ${fg} 10%, transparent)`,
+          "--muted-foreground": `color-mix(in oklch, ${fg} 62%, transparent)`,
+          "--accent": `color-mix(in oklch, ${fg} 10%, transparent)`,
+          "--accent-foreground": fg,
+          "--border": `color-mix(in oklch, ${fg} 16%, transparent)`,
+          "--input": `color-mix(in oklch, ${fg} 20%, transparent)`,
         } as React.CSSProperties
       }
     >
+
       {/* Fixed header — stays visible while messages scroll */}
       {selected.length > 0 ? (
         <header className="z-20 flex shrink-0 items-center gap-2 border-b border-border bg-surface px-2 py-2.5">
