@@ -211,7 +211,11 @@ function RoomPage() {
   const peerForCall = friends.find((f) => f.id === call.peerId) ?? active;
 
   return (
-    <div className="h-[100dvh] overflow-hidden bg-background md:flex">
+    <div
+      className="overflow-hidden bg-background md:flex"
+      style={{ height: viewportHeight ? `${viewportHeight}px` : "100dvh" }}
+    >
+
       <CallOverlay
         call={call}
         peerName={peerForCall ? nameOf(peerForCall) : "Unknown"}
