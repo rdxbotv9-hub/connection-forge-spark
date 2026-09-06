@@ -18,6 +18,7 @@ import { isGateUnlocked, lockGate } from "@/lib/gate-session";
 import { useCall } from "@/hooks/useCall";
 import { usePresence } from "@/hooks/usePresence";
 import { useAppLock } from "@/hooks/useAppLock";
+import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { CallOverlay } from "@/components/chat/CallOverlay";
 import { UserAvatar } from "@/components/chat/UserAvatar";
@@ -71,6 +72,7 @@ function RoomPage() {
 
   // Leaving the app re-locks the private area, so the access key is needed again.
   useAppLock(Boolean(session));
+  const viewportHeight = useViewportHeight();
 
   useEffect(() => {
     if (loading) return;
