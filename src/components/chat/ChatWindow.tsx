@@ -690,7 +690,9 @@ export function ChatWindow({
             </div>
           </div>
         )}
+        </div>
       </div>
+
 
       {/* Composer */}
       <div className="shrink-0 border-t border-border bg-surface">
