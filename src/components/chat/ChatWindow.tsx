@@ -822,6 +822,13 @@ export function ChatWindow({
 
       <MediaViewer item={viewer} onClose={() => setViewer(null)} />
 
+      <GifPicker
+        open={showStickers}
+        onOpenChange={setShowStickers}
+        onPick={(payload) => void sendSticker(payload)}
+      />
+
+
       {/* Contact info */}
       <Sheet open={showProfile} onOpenChange={setShowProfile}>
         <SheetContent side="right" className="w-[86vw] overflow-y-auto sm:max-w-sm">
