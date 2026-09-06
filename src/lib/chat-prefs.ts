@@ -115,7 +115,16 @@ export type ThreadPrefs = {
   customBg?: string | undefined;
   customOut?: string | undefined;
   fontScale?: number | undefined;
+  /** storage path in the chat-media bucket for a custom wallpaper */
+  wallpaperPath?: string | undefined;
+  /** 0 – 80: how much the wallpaper is dimmed so text stays readable */
+  wallpaperDim?: number | undefined;
+  /** 0 – 10 px blur on the wallpaper */
+  wallpaperBlur?: number | undefined;
+  /** hide the theme's decorative pattern */
+  noPattern?: boolean | undefined;
 };
+
 
 const THREAD_KEY = (me: string, peer: string) => `srt-theme-${me}-${peer}`;
 const NICK_KEY = (me: string) => `srt-nicknames-${me}`;
