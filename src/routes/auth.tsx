@@ -99,6 +99,20 @@ function AuthPage() {
       return;
     }
 
+    // Make sure we are signed in before saving the profile row.
+    if (!data.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: usernameToEmail(username),
+        password: regPass,
+      });
+      if (signInError) {
+        setBusy(false);
+        toast.error("Account made, but sign in failed. Please log in.");
+        return;
+      }
+    }
+
+
     let uid = randomUid();
     for (let attempt = 0; attempt < 5; attempt++) {
       const { error: insertError } = await supabase.from("profiles").insert({
